@@ -1,6 +1,7 @@
 import { WebcastPushConnection } from 'tiktok-live-connector';
 import { Server as SocketIOServer } from 'socket.io';
 import { sendGiftToFiveM } from './sendToFiveM'; 
+import { addLog } from './logs';
 
 const tiktokUsername = '@trippledx';
 
@@ -19,7 +20,7 @@ export const setupTikTokConnection = (io: SocketIOServer) => {
     console.log('New subscriber:', subscriberData.username);
     io.emit('new_subscriber', { username: subscriberData.username });
     sendGiftToFiveM(subscriberData);
-
+    addLog(`Nouvelle abonnée : ${subscriberData.username}`)
   });
 
   connection.on('gift', (data) => {
@@ -28,6 +29,7 @@ export const setupTikTokConnection = (io: SocketIOServer) => {
     console.log('New gift:', subscriberData.username, subscriberData.data);
     io.emit('gift', { username: subscriberData.username, gift: subscriberData.data });
     sendGiftToFiveM(subscriberData);
+    addLog(`Cadeau : ${subscriberData.username} donne ${subscriberData.data}`)
 
   });
 
@@ -37,6 +39,7 @@ export const setupTikTokConnection = (io: SocketIOServer) => {
     console.log('[TIKTOK] ', subscriberData.username, subscriberData.data);
     io.emit('new_comment', { type: 'tiktok', username: subscriberData.username, comment: subscriberData.data });
     sendGiftToFiveM(subscriberData);
+    addLog(`[TIKTOK] ${subscriberData.username} : ${subscriberData.data}`)
 
   });
 };

@@ -1,6 +1,7 @@
 import tmi from 'tmi.js';
 import { Server as SocketIOServer } from 'socket.io';
 import { sendGiftToFiveM } from './sendToFiveM'; 
+import { addLog } from './logs';
 
 const twitchUsername = 'tsuky_76';
 
@@ -28,7 +29,7 @@ export const connectTwitch = (io: SocketIOServer) => {
     
         console.log('[TWITCH] ', subscriberData.username, subscriberData.data);
         io.emit('new_comment', { type: 'twitch', username: subscriberData.username, comment: subscriberData.data });
-        
+        addLog(`[TWITCH] ${subscriberData.username} : ${subscriberData.data}`)
 
     });
 
