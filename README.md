@@ -20,8 +20,7 @@ Ce projet permet de gérer les notifications de nouveaux abonnés et cadeaux env
 1. Clonez le repository
 
    ```bash
-   git clone https://github.com/votre-utilisateur/votre-projet.git
-   cd votre-projet
+   git clone https://github.com/Tsuuky/Tiktok-twitch-displayStreamLabs.git
 
 2. Installer 
     npm install
