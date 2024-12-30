@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const sendGiftToFiveM = (giftData: { type: string, username: string, data: string }) => {
-    const fivemURL = 'https://blaize76-57yg86.users.cfx.re/ts-interactionTiktok';
+    const fivemURL = 'INSERT YOUR API KEY';
 
     axios.post(fivemURL, {
         type: giftData.type,
