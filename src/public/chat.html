@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <title>Commentaires TikTok Live</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+        .comments {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #ffffff00;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            overflow: hidden; /* Masque les commentaires qui sortent du cadre */
+        }
+        .comment {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f9f9f900;
+            border-radius: 5px;
+            border: 1px solid #dddddd00;
+            color: #f0f0f0;
+            font-size: 28px; /* Augmente la taille du texte des commentaires */
+            opacity: 0; /* Invisible par défaut pour l'animation de fondu */
+            transform: translateX(-100%); /* Position initiale hors de l'écran */
+            transition: all 0.5s ease; /* Animation de l'apparition */
+        }
+        .comment strong { /* Pseudo */
+            color: #ffffff;
+            font-size: 30px; /* Augmente la taille de la police du pseudo */
+        }
+        .comment.visible {
+            opacity: 1; /* Rendre visible */
+            transform: translateX(0); /* Ramener à la position normale */
+        }
+        .comment .icon {
+            margin-right: 8px;
+            font-size: 24px; /* Taille de l'icône */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="comments" id="comments">
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        const socket = io(); // Connexion au serveur Socket.IO
+        const commentsDiv = document.getElementById('comments');
+
+        // Fonction pour ajouter un nouveau commentaire
+        function addComment(type, username, comment) {
+            const commentDiv = document.createElement('div');
+            commentDiv.classList.add('comment');
+            
+            let icon = '<i class="fa-solid fa-toggle-on"></i>'
+            if ( type == "tiktok") {
+                icon = '<i class="fa-brands fa-tiktok"></i>'; // Icône de l'utilisateur
+
+            } else if ( type == "twitch") {
+                icon = '<i class="fa-brands fa-twitch"></i>'; // Icône de l'utilisateur
+
+            }
+            const strongTag = `<strong>${icon}${"  "}${username}</strong>: ${comment}`;
+             
+            commentDiv.innerHTML = strongTag;
+            commentsDiv.appendChild(commentDiv);
+
+            // Appliquer l'animation de fondu
+            setTimeout(() => {
+                commentDiv.classList.add('visible');
+            }, 100);
+
+            // Supprimer les anciens commentaires s'il y en a plus de 10
+            const allComments = commentsDiv.querySelectorAll('.comment');
+            if (allComments.length > 7) {
+                const firstComment = allComments[0];
+                firstComment.style.transition = 'transform 0.5s ease, opacity 0.5s ease';
+                firstComment.style.transform = 'translateY(-100%)';
+                firstComment.style.opacity = '0';
+                setTimeout(() => firstComment.remove(), 200);
+            }
+        }
+
+        // Écouter les nouveaux commentaires depuis le serveur
+        socket.on('new_comment', (data) => {
+            console.log(data)
+            addComment(data.type, data.username, data.comment);
+        });
+    </script>
+</body>
+</html>

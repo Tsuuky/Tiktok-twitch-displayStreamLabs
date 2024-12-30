@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadeaux TikTok Live</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+    
+        /* Zone d'animation pour le cadeau */
+        .gift-animation {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            display: none;
+            z-index: 1000;
+            background-color: rgba(0, 0, 0, 0);
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 1s ease-in-out;
+        }
+    
+        /* Styles pour le texte et l'image */
+        #gift-name {
+            font-size: 40px;
+            color: white;
+            margin-top: 20px;
+        }
+
+        #gift-username {
+            font-size: 25px;
+            color: #ffcc00;
+            margin-top: 10px;
+        }
+    
+        #gift-icon {
+            width: 200px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes zoomIn {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .gift-animation {
+            animation: zoomIn 0.5s ease-in-out;
+        }
+
+
+    </style>
+</head>
+<body>
+    <div id="gift-animation" class="gift-animation">
+        <img id="gift-icon" src="" alt="Gift Icon" />
+        <div id="gift-name"></div>
+        <div id="gift-username"></div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        const socket = io(); // Connexion au serveur Socket.IO
+    
+        // File d'attente pour gérer les cadeaux successifs
+        let giftQueue = [];
+        let isPlaying = false;
+    
+        // Gérer les nouveaux cadeaux
+        socket.on('gift', (data) => {
+            console.log(`Nouveau cadeau : ${data.giftName} par ${data.username}`);
+            giftQueue.push(data);
+            if (!isPlaying) {
+                playNextGift();
+            }
+        });
+    
+        // Fonction pour jouer le prochain cadeau
+        function playNextGift() {
+            if (giftQueue.length === 0) {
+                isPlaying = false;
+                return; // Fin de la file
+            }
+
+            // Marquer comme en cours
+            isPlaying = true;
+
+            const data = giftQueue.shift(); // Récupérer le prochain cadeau
+
+            // Sélectionner les éléments de la page
+            const giftElement = document.getElementById('gift-animation');
+            const iconElement = document.getElementById('gift-icon');
+            const nameElement = document.getElementById('gift-name');
+            const usernameElement = document.getElementById('gift-username');
+
+            iconElement.src = 'assets/gift.gif'; 
+            nameElement.textContent = `Cadeau : ${data.giftName}`;
+            usernameElement.textContent = `Envoyé par : ${data.username}`;
+
+            giftElement.style.display = 'block';
+
+            const audio = new Audio('assets/gift.mp3'); 
+            audio.volume = 0.1
+            audio.play();
+
+            setTimeout(() => {
+                giftElement.style.display = 'none';
+                audio.pause(); 
+                audio.currentTime = 0; 
+
+                playNextGift();
+            }, 10000);
+        }
+    </script>
+</body>
+</html>

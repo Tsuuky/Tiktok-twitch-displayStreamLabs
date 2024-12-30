@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abonnés TikTok Live</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .subscriber-animation {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            display: none;
+            z-index: 1000;
+            background-color: rgba(0, 0, 0, 0);
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #subscriber-name {
+            font-size: 40px;
+            color: white;
+            margin-top: 20px;
+        }
+
+        #subscriber-gif {
+            width: 250px;
+            height: auto;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="subscriber-animation" class="subscriber-animation">
+        <img id="subscriber-gif" src="" alt="GIF" style="display:none;" />
+        <div id="subscriber-name"></div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+        let subscriberQueue = [];
+        let isPlaying = false;
+
+        socket.on('new_subscriber', (data) => {
+            console.log(`New subscriber: ${data.username}`);
+            subscriberQueue.push(data);
+            if (!isPlaying) {
+                playNextSubscriber();
+            }
+        });
+
+        function playNextSubscriber() {
+            if (subscriberQueue.length === 0) {
+                isPlaying = false;
+                return;
+            }
+
+            isPlaying = true;
+            const data = subscriberQueue.shift();
+
+            const subscriberElement = document.getElementById('subscriber-animation');
+            const gifElement = document.getElementById('subscriber-gif');
+            const nameElement = document.getElementById('subscriber-name');
+
+            gifElement.src = 'assets/subscribe.gif';
+            gifElement.style.display = 'block';
+            nameElement.textContent = `New Subscriber: ${data.username}`;
+
+            subscriberElement.style.display = 'block';
+
+            const audio = new Audio('assets//subscribe.mp3');
+            audio.play();
+
+            setTimeout(() => {
+                subscriberElement.style.display = 'none';
+                audio.pause();
+                audio.currentTime = 0;
+                playNextSubscriber();
+            }, 10000);
+        }
+    </script>
+</body>
+</html>
