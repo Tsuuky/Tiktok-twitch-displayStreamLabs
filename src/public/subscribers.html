@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abonnés TikTok Live</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <title>Commentaires TikTok Live</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -12,95 +13,94 @@
             padding: 0;
         }
 
-        .subscriber-animation {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            display: none;
-            z-index: 1000;
-            background-color: rgba(0, 0, 0, 0);
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+        .comments {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #ffffff00;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            overflow: hidden; /* Masque les commentaires qui sortent du cadre */
         }
 
-        #subscriber-name {
-            font-size: 40px;
-            color: white;
-            margin-top: 20px;
+        .comment {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f9f9f900;
+            border-radius: 5px;
+            border: 1px solid #dddddd00;
+            color: #f0f0f0;
+            font-size: 28px; /* Augmente la taille du texte des commentaires */
+            opacity: 0; /* Invisible par défaut pour l'animation de fondu */
+            transform: translateX(-100%); /* Position initiale hors de l'écran */
+            transition: all 0.5s ease; /* Animation de l'apparition */
         }
 
-        #subscriber-gif {
-            width: 250px;
-            height: auto;
-            animation: fadeIn 1s ease-in-out;
+        .comment strong { /* Pseudo */
+            color: #ffffff;
+            font-size: 30px; /* Augmente la taille de la police du pseudo */
         }
 
-        @keyframes fadeIn {
-            0% {
-                opacity: 0;
-            }
-            100% {
-                opacity: 1;
-            }
+        .comment.visible {
+            opacity: 1; /* Rendre visible */
+            transform: translateX(0); /* Ramener à la position normale */
+        }
+
+        .comment .icon {
+            margin-right: 8px;
+            font-size: 24px; /* Taille de l'icône */
         }
     </style>
 </head>
 <body>
-    <div id="subscriber-animation" class="subscriber-animation">
-        <img id="subscriber-gif" src="" alt="GIF" style="display:none;" />
-        <div id="subscriber-name"></div>
-    </div>
+    <div class="comments" id="comments"></div>
 
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script>
-        const socket = io();
-        let subscriberQueue = [];
-        let isPlaying = false;
+        const socket = io(); // Connexion au serveur Socket.IO
+        const commentsDiv = document.getElementById('comments');
+        const MAX_COMMENTS = 10; // Limiter le nombre de commentaires visibles à 10
+        let messageQueue = []; // File d'attente pour gérer les messages entrants
 
-        socket.on('new_subscriber', (data) => {
-            console.log(`New subscriber: ${data.username}`);
-            subscriberQueue.push(data);
-            if (!isPlaying) {
-                playNextSubscriber();
+        // Fonction pour ajouter un nouveau commentaire
+        function addComment(type, username, comment) {
+            const commentDiv = document.createElement('div');
+            commentDiv.classList.add('comment');
+            
+            let icon = '<i class="fa-solid fa-toggle-on"></i>'
+            if (type === "tiktok") {
+                icon = '<i class="fa-brands fa-tiktok"></i>'; // Icône de l'utilisateur
+            } else if (type === "twitch") {
+                icon = '<i class="fa-brands fa-twitch"></i>'; // Icône de l'utilisateur
             }
-        });
+            const strongTag = `<strong>${icon}${"  "}${username}</strong>: ${comment}`;
+             
+            commentDiv.innerHTML = strongTag;
+            commentsDiv.appendChild(commentDiv);
 
-        function playNextSubscriber() {
-            if (subscriberQueue.length === 0) {
-                isPlaying = false;
-                return;
-            }
-
-            isPlaying = true;
-            const data = subscriberQueue.shift();
-
-            const subscriberElement = document.getElementById('subscriber-animation');
-            const gifElement = document.getElementById('subscriber-gif');
-            const nameElement = document.getElementById('subscriber-name');
-
-            gifElement.src = 'assets/subscribe.gif';
-            gifElement.style.display = 'block';
-            nameElement.textContent = `New Subscriber: ${data.username}`;
-
-            subscriberElement.style.display = 'block';
-
-            const audio = new Audio('assets//subscribe.mp3');
-            audio.play();
-
+            // Appliquer l'animation de fondu
             setTimeout(() => {
-                subscriberElement.style.display = 'none';
-                audio.pause();
-                audio.currentTime = 0;
-                playNextSubscriber();
-            }, 10000);
+                commentDiv.classList.add('visible');
+            }, 100);
+
+            // Ajouter le message à la file d'attente
+            messageQueue.push(commentDiv);
+
+            // Supprimer les anciens commentaires si plus de MAX_COMMENTS
+            if (messageQueue.length > MAX_COMMENTS) {
+                const firstComment = messageQueue.shift(); // Retirer le plus ancien
+                firstComment.style.transition = 'transform 0.5s ease, opacity 0.5s ease';
+                firstComment.style.transform = 'translateY(-100%)';
+                firstComment.style.opacity = '0';
+                setTimeout(() => firstComment.remove(), 500); // Retirer après l'animation
+            }
         }
+
+        // Écouter les nouveaux commentaires depuis le serveur
+        socket.on('new_comment', (data) => {
+            console.log(data)
+            addComment(data.type, data.username, data.comment);
+        });
     </script>
 </body>
 </html>
