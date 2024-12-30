@@ -12,6 +12,7 @@
             margin: 0;
             padding: 0;
         }
+
         .comments {
             max-width: 600px;
             margin: 50px auto;
@@ -21,6 +22,7 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
             overflow: hidden; /* Masque les commentaires qui sortent du cadre */
         }
+
         .comment {
             margin-bottom: 10px;
             padding: 10px;
@@ -33,67 +35,74 @@
             transform: translateX(-100%); /* Position initiale hors de l'écran */
             transition: all 0.5s ease; /* Animation de l'apparition */
         }
+
         .comment strong { /* Pseudo */
             color: #ffffff;
             font-size: 30px; /* Augmente la taille de la police du pseudo */
         }
+
         .comment.visible {
             opacity: 1; /* Rendre visible */
             transform: translateX(0); /* Ramener à la position normale */
         }
+
         .comment .icon {
             margin-right: 8px;
             font-size: 24px; /* Taille de l'icône */
         }
-
     </style>
 </head>
 <body>
-    <div class="comments" id="comments">
-    </div>
+    <div class="comments" id="comments"></div>
 
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script>
-        const socket = io(); // Connexion au serveur Socket.IO
+        const socket = io();
         const commentsDiv = document.getElementById('comments');
+        const MAX_COMMENTS = 10; // Limiter le nombre de commentaires visibles à 10
+        const messageQueue = []; // File d'attente pour gérer les messages entrants
+        const userMessageHistory = {}; // Historique des messages des utilisateurs pour filtrer les doublons
+        const DUPLICATE_TIME_LIMIT = 5000; // Délai en ms pour ne pas répéter le même message (5 secondes)
 
-        // Fonction pour ajouter un nouveau commentaire
         function addComment(type, username, comment) {
+            const now = Date.now();
+            if (userMessageHistory[username] && now - userMessageHistory[username].timestamp < DUPLICATE_TIME_LIMIT && userMessageHistory[username].message === comment) {
+                return;
+            }
+
+            userMessageHistory[username] = { message: comment, timestamp: now };
+
             const commentDiv = document.createElement('div');
             commentDiv.classList.add('comment');
             
-            let icon = '<i class="fa-solid fa-toggle-on"></i>'
-            if ( type == "tiktok") {
-                icon = '<i class="fa-brands fa-tiktok"></i>'; // Icône de l'utilisateur
-
-            } else if ( type == "twitch") {
-                icon = '<i class="fa-brands fa-twitch"></i>'; // Icône de l'utilisateur
-
+            let icon = '<i class="fa-solid fa-toggle-on"></i>';
+            if (type === "tiktok") {
+                icon = '<i class="fa-brands fa-tiktok"></i>';
+            } else if (type === "twitch") {
+                icon = '<i class="fa-brands fa-twitch"></i>';
             }
             const strongTag = `<strong>${icon}${"  "}${username}</strong>: ${comment}`;
              
             commentDiv.innerHTML = strongTag;
             commentsDiv.appendChild(commentDiv);
 
-            // Appliquer l'animation de fondu
             setTimeout(() => {
                 commentDiv.classList.add('visible');
             }, 100);
 
-            // Supprimer les anciens commentaires s'il y en a plus de 10
-            const allComments = commentsDiv.querySelectorAll('.comment');
-            if (allComments.length > 7) {
-                const firstComment = allComments[0];
+            messageQueue.push(commentDiv);
+
+            if (messageQueue.length > MAX_COMMENTS) {
+                const firstComment = messageQueue.shift();
                 firstComment.style.transition = 'transform 0.5s ease, opacity 0.5s ease';
                 firstComment.style.transform = 'translateY(-100%)';
                 firstComment.style.opacity = '0';
-                setTimeout(() => firstComment.remove(), 200);
+                setTimeout(() => firstComment.remove(), 500);
             }
         }
 
-        // Écouter les nouveaux commentaires depuis le serveur
         socket.on('new_comment', (data) => {
-            console.log(data)
+            console.log(data);
             addComment(data.type, data.username, data.comment);
         });
     </script>

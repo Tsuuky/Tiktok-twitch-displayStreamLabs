@@ -95,7 +95,7 @@
     
         // Gérer les nouveaux cadeaux
         socket.on('gift', (data) => {
-            console.log(`Nouveau cadeau : ${data.giftName} par ${data.username}`);
+            console.log(`Nouveau cadeau : ${data.gift} par ${data.username}`);
             giftQueue.push(data);
             if (!isPlaying) {
                 playNextGift();
@@ -121,7 +121,7 @@
             const usernameElement = document.getElementById('gift-username');
 
             iconElement.src = 'assets/gift.gif'; 
-            nameElement.textContent = `Cadeau : ${data.giftName}`;
+            nameElement.textContent = `Cadeau : ${data.gift}`;
             usernameElement.textContent = `Envoyé par : ${data.username}`;
 
             giftElement.style.display = 'block';
